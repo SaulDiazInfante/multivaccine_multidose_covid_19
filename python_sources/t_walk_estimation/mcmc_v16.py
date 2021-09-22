@@ -1,57 +1,13 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Sat March 6 18:01:12 2021
-
-@author: Mario Santana Cibrian
-COVID-19  for long term predictions.
-
-v00: Poisson likelihood. Parameters related to the effective
-contact rate, initial conditions for states E, I, Y,
-and dispersion parameters are estimated.
-v01: Priors for initial conditions are now informative Gamma.
-v03: Only deaths are used for estimation. Uniform(0,20) priors for initial
-     conditions.
-v03.1:  Reported cases and deaths are used for estimation. Also, 7-day moving
-        average is used instead of the raw data.
-v07: Similar to v03 and v06. Reported cases and deaths are used to estimate
-     parameters. A 7-day moving average is used instead of daily cases oto avoid
-     variability
-v10: Similar to v07 but parameter alpha is estimated instead of mu.
-v14: Similar to v13 but the contact rate from the date of the first case up to 
-March 23, 2020 is held constant.
-"""
-
 import numpy as np
-from scipy.integrate import odeint
-import matplotlib.pyplot as plt
-from numpy.random import poisson as rpois
-from scipy.special import gammaln
-import pytwalk3 as pytwalk
-# from pytwalk3 import IAT
+from t_walk_estimation.pytwalk3 import pytwalk3 as pytwalk
 import pandas as pd
-import matplotlib.ticker as ticker
-import matplotlib.dates as mdates
-from scipy.stats import gamma as gammadist
-from scipy.interpolate import interp1d, pchip
-from scipy.optimize import differential_evolution
-from analysis_v10 import energyplot, traceplot, marginalplot, \
-    getMAP, getsample, parsummary
+from t_walk_estimation.plots_setup import *
+from scipy.interpolate import pchip
+from analysis_v10 import getMAP, getsample
 
-# Graphical parameters
-plt.rcParams.update({'font.size': 16})
-plt.rc('grid', linestyle="--", color='gray')
-plt.rcParams['figure.figsize'] = 12, 8
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
-# Aux variables
-version = "v16"
-data_path = ""
-samples_path = ""
-figures_path = ""
-# data_path = "/home/mario/Dropbox/COVID_data/"
-# samples_path = "/home/mario/Dropbox/COVID_long_term/v03/samples/"
-# Data initialization
+# Plotting parameters
+set_plot_parameters()
+
 entity = "CDMX"
 period = "daily"
 #

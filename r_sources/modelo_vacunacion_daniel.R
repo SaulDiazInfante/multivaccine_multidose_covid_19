@@ -1,6 +1,19 @@
+#In this model we start vaccination on Feb 14, 2021.
+#Uses some outputs from Solution_0709.R by A. Acuña
+
+#This code includes vaccination. Vaccination has a weekly strategy.
+#Each week, a number N_k individuals from the S class get vaccinated.
+#The scale of the problem is in days.
+
+#Information obtained from Acuña Code
+
+#Information obtained from (paper)
+
 rm(list=ls())
+# Cargamos paquete deSolve
 library(deSolve)
-#two months vaccination. You have to run things so you only stay
+
+#two months vaccination. You have to run things so you only stay 
 #within these values.
 #IMPORTANT: Simulation for 60 days at most.
 #vaccinated_perweek1<-c(100000,200000,100000,150000,20000,70000,10000,8000,4000,400) #TBD
@@ -9,8 +22,13 @@ library(deSolve)
 vaccinated_perweek1<-replicate(53, 0) #TBD
 vaccinated_perweek2<-replicate(53, 0) #TBD
 
+
 Nvacc_schemes<-length(vaccinated_perweek1)
-parameters_values <- c(
+
+
+# Indicamos par?metros iniciales
+
+parameters_values <- c(   
   alpha_IS=1/14, # symptomatic recovery rate
   alpha_IA=1/7, # asymptomatic recovery rate
   alpha_A=0.1,#1/10, # ambulatory recovery rate
@@ -81,23 +99,24 @@ initial_values <- c(
   CA=421363.8,
   CH=49450.24
 )
-N_0<-sum(initial_values) - (421363.8 + 49450.24)
-#N<- S+E+IS+IA+A+H+R+V1+EV1+ISV1+IAV1+AV1+HV1+V2 +
-# EV2+ISV2+IAV2+AV2+HV2+D
+N_0<-sum(initial_values)-421363.8-49450.24
+#N<- S+E+IS+IA+A+H+R+V1+EV1+ISV1+IAV1+AV1+HV1+V2+EV2+ISV2+IAV2+AV2+HV2+D
+# Indicamos el n? de d?as a simular
 time_values <- seq(0, 365)
-actual_vacc_scheme <- 1 #indicates the vaccination week.
-S_k <- 8034203
-#This is the population at the beginning of the kth week
+actual_vacc_scheme=1 #indicates the vaccination week.
+S_k=8034203 #This is the population at the beginning of the kth week
+
+# Indicamos las ecuaciones diferenciales del modelo SIR
 basic_model <- function(time, variables, parameters) {
   with(as.list(c(variables, parameters)), {
-    scheme_num <- time/7
+
+    scheme_num=time/7
     if (scheme_num < actual_vacc_scheme) {
       phi_V1<- -(1/7)*log((S_k-vaccinated_perweek1[actual_vacc_scheme])/(S_k))
       phi_V2<- -(1/7)*log((S_k-vaccinated_perweek2[actual_vacc_scheme])/(S_k))
-    }
-    else {
-      actual_vacc_scheme <- actual_vacc_scheme + 1
-      S_k <- S
+    }else{
+      actual_vacc_scheme<<-actual_vacc_scheme+1 
+      S_k<<-S 
       phi_V1=-(1/7)*log((S_k-vaccinated_perweek1[actual_vacc_scheme])/(S_k))
       phi_V2=-(1/7)*log((S_k-vaccinated_perweek2[actual_vacc_scheme])/(S_k))
     }
@@ -136,7 +155,7 @@ basic_model <- function(time, variables, parameters) {
   })
 }
 
-# Here is better to use a recursion over time
+# Simulamos
 salida <- ode(
   y = initial_values,
   times = time_values,
@@ -152,3 +171,23 @@ library(reshape2)
 N_t<-(salida.df$S+salida.df$E+salida.df$IS+salida.df$IA+salida.df$A+salida.df$H+salida.df$R+salida.df$V1+salida.df$EV1+salida.df$ISV1+salida.df$IAV1+salida.df$AV1+salida.df$HV1+salida.df$V2+salida.df$EV2+salida.df$ISV2+salida.df$IAV2+salida.df$AV2+salida.df$HV2+salida.df$D)/N_0
 plot(N_t)
 #
+
+
+# Creamos el gr?fico 1
+#salida <- as.data.frame(salida)
+#with(salida, {
+#  plot(time, IA, type = "l", col = "blue", xlab = "tiempo (dias)", ylab = "numero de personas")
+#  # lines(time, S, col = "red")
+#  # lines(time, D, col = "green")
+#})
+#legend("right", c("infecciosos", "susceptibles", "recuperados"),
+#       col = c("blue", "red", "green"), lty = 1, bty = "n")
+
+
+#salida.m = melt(salida.df, id.vars='time') # this makes plotting easier by puting all variables in a single column
+#library(ggplot2)
+#p <- ggplot(salida.m, aes(time, value, color = variable)) + geom_point()
+#print(p)   
+
+
+
