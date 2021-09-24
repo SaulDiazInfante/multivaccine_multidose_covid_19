@@ -78,7 +78,7 @@ for (k in 2:length(splitedTimeLine)) {
 #
 # required by ggplot: data object must be a data frame
 initial_values <- loadInitialConditions(dataFrameModelParameters)
-N_0 <- sum(initial_values) # - (421363.8 + 49450.24)
+N_0 <- sum(initial_values)  - (421363.8 + 49450.24)
 N_t <-
   (
     currentSolution$S + currentSolution$E + currentSolution$I_S + 
@@ -90,11 +90,13 @@ N_t <-
       currentSolution$H_V2 + currentSolution$D
   ) / N_0
 
-fig00 <- plot_ly(currentSolution, x = ~time, y = N_t, 
-               mode = 'lines+markers') #%>% add_markers()
-figVac <- plot_ly(currentSolution, x = ~time, 
-                 y = ~X_k, 
-                 type = 'bar')
+fig00 <- ggplot(currentSolution, aes(x = time, y = N_t))
+fig00 <-  fig00 + geom_line()
+plotly::ggplotly(fig00)
+
+figVac <- ggplot(currentSolution, aes(x = time, y = X_k))
+figVac <-  figVac + geom_line()
+plotly::ggplotly(figVac)    
 
 figS <- plot_ly(currentSolution, x = ~time, 
                  y = ~S, 
