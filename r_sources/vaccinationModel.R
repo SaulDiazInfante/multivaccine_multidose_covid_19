@@ -1,4 +1,4 @@
-# rm(list = ls())
+# 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
 library(deSolve)
 library(rjson)
 library(reshape2)
@@ -30,17 +30,19 @@ splitedTimeLine <-
     ceiling(seq_along(timeLine)/7)
   )
 # First iteration
-currentTimeWeek <- unlist(splitedTimeLine[1])
+currentTimeWeek <- unlist(splitedTimeLine[[1]])
 phiV <- 
   computeVaccinatonRates(parameters_values, 
                          vaccinated_perweek1[1],
                          vaccinated_perweek2[1])
 parameters_values["phi_V1"] <- phiV[1]
 parameters_values["phi_V2"] <- phiV[2]
+fZero <- evaluteRhsODEVaccinationModel(currentTimeWeek[1], 
+                                       initial_values, parameters_values)
 currentSolution <- ode(
   y = initial_values,
   times = currentTimeWeek,
-  func = evaluatesRHSBasicModel,
+  func = evaluteRhsODEVaccinationModel,
   parms = parameters_values
 )
 currentSolution <- as.data.frame(currentSolution)
@@ -49,26 +51,28 @@ odeVarNames <- c("time", "S", "E", "I_S", "I_A", "A", "H", "R",
                  "V_2",  "E_V2", "I_SV2", "I_AV2", "A_V2", "H_V2",
                  "D", "CA", "CH", "X_k")
 colnames(currentSolution) <- odeVarNames
-
+#
 for (k in 2:length(splitedTimeLine)) {
+  # Select interval of integration
   currentTimeWeek <- unlist(splitedTimeLine[[k]])
-  initial_values < tail(currentSolution[2:23], n = 1)
+  # Update parameters
+  initial_values <- tail(currentSolution[2:24], n = 1)
+  phiV <- 
+    computeVaccinatonRates(parameters_values, 
+                           vaccinated_perweek1[k],
+                           vaccinated_perweek2[k])
+  parameters_values["phi_V1"] <- phiV[1]
+  parameters_values["phi_V2"] <- phiV[2]
   newSolution <- ode(
-    y = initial_values,
+    y = as.numeric(initial_values),
     times = currentTimeWeek,
-    func = evaluatesRHSBasicModel,
+    func = evaluteRhsODEVaccinationModel,
     parms = parameters_values
   )
   newSolution <- as.data.frame(newSolution)
   colnames(newSolution) <- odeVarNames
-  # Joing solution
+  # Joint solution
   currentSolution <- bind_rows(currentSolution, newSolution)
-  phiV <- 
-    computeVaccinatonRates(parameters_values, 
-                           vaccinated_perweek1[1],
-                           vaccinated_perweek2[1])
-  parameters_values["phi_V1"] <- phiV[1]
-  parameters_values["phi_V2"] <- phiV[2]
 }
 #
 #
@@ -84,9 +88,22 @@ N_t <-
       currentSolution$H_V1 + currentSolution$V_2 + currentSolution$E_V2 + 
       currentSolution$I_SV2 + currentSolution$I_AV2 + currentSolution$A_V2 + 
       currentSolution$H_V2 + currentSolution$D
-  )# / N_0
+  ) / N_0
 
-fig <- plot_ly(currentSolution, x = ~time, y = N_t, 
+fig00 <- plot_ly(currentSolution, x = ~time, y = N_t, 
                mode = 'lines+markers') #%>% add_markers()
-fig
-#TODO: Implement vaccination rates computation
+figVac <- plot_ly(currentSolution, x = ~time, 
+                 y = ~X_k, 
+                 type = 'bar')
+
+figS <- plot_ly(currentSolution, x = ~time, 
+                 y = ~S, 
+                 type = 'bar')
+
+figI_S <- plot_ly(currentSolution, x = ~time, 
+                y = ~I_S, 
+                mode = 'lines+markers')
+
+figI_A <- plot_ly(currentSolution, x = ~time, 
+                  y = ~I_A, 
+                  mode = 'lines+markers')

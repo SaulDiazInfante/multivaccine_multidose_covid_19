@@ -12,6 +12,7 @@
 rm(list=ls())
 # Cargamos paquete deSolve
 library(deSolve)
+options(digits = 22)
 
 #two months vaccination. You have to run things so you only stay 
 #within these values.
@@ -73,7 +74,9 @@ parameters_values <- c(
   q_ISV2=0.85,
   q_H= 0.6194573, #Solution_0709.R
   q_HV1=0.6194573,
-  q_HV2=0.6194573
+  q_HV2=0.6194573,
+  phi_V1=0.0, #These will not be constants
+  phi_V2=0.0
 )
 initial_values <- c(
   S=8034203,  
@@ -100,33 +103,21 @@ initial_values <- c(
   CH=49450.24
 )
 N_0<-sum(initial_values)-421363.8-49450.24
-#N<- S+E+IS+IA+A+H+R+V1+EV1+ISV1+IAV1+AV1+HV1+V2+EV2+ISV2+IAV2+AV2+HV2+D
+
 # Indicamos el n? de d?as a simular
-time_values <- seq(0, 365)
-actual_vacc_scheme=1 #indicates the vaccination week.
-S_k=8034203 #This is the population at the beginning of the kth week
+time_values <- seq(0, 7)
 
 # Indicamos las ecuaciones diferenciales del modelo SIR
 basic_model <- function(time, variables, parameters) {
   with(as.list(c(variables, parameters)), {
 
-    scheme_num=time/7
-    if (scheme_num < actual_vacc_scheme) {
-      phi_V1<- -(1/7)*log((S_k-vaccinated_perweek1[actual_vacc_scheme])/(S_k))
-      phi_V2<- -(1/7)*log((S_k-vaccinated_perweek2[actual_vacc_scheme])/(S_k))
-    }else{
-      actual_vacc_scheme<<-actual_vacc_scheme+1 
-      S_k<<-S 
-      phi_V1=-(1/7)*log((S_k-vaccinated_perweek1[actual_vacc_scheme])/(S_k))
-      phi_V2=-(1/7)*log((S_k-vaccinated_perweek2[actual_vacc_scheme])/(S_k))
-    }
-    
+  #  N<- S + E + IS + IA + A + H + R + V1 + V2 + EV1 + EV2 +ISV1 + ISV2 + IAV1 +IAV2 + AV1 + AV2 + HV1 + HV2+D
     Ns <- S + E + IS + IA + A + H + R + V1 + V2 + EV1 + EV2 +ISV1 + ISV2 + IAV1 +IAV2 + AV1 + AV2 + HV1 + HV2 
     Nss <- Ns - A - H - AV1 - AV2 - HV1 - HV2
-    l_f <- (beta/Nss)*(q*(IA+(1-p_AV1)*IAV1+(1-p_AV2)*IAV2)+ (IS+(1-p_SV1)*ISV1+(1-p_SV2)*ISV2))
+    l_f <- (beta/Nss)*(q*(IA+(1-p_AV1)*IAV1+(1-p_AV2)*IAV2) + (IS+(1-p_SV1)*ISV1+(1-p_SV2)*ISV2))
     
     dS  <- mu*Ns - (l_f + mu + phi_V1 + phi_V2)*S + delta_R*R + gamma_1*V1 + gamma_2*V2 
-    dE  <- l_f *S  - (delta_E *E + mu)*E
+    dE  <- l_f *S  - (delta_E + mu)*E
     dIS <- (1-p_E)*delta_E *E - (q_IS*alpha_IS +delta_IS*(1-q_IS) + mu)* IS
     dIA <- p_E*delta_E*E - (alpha_IA+mu)*IA
     dA  <- p_IS*delta_IS*(1-q_IS)*IS-(alpha_A+mu)*A
@@ -150,8 +141,12 @@ basic_model <- function(time, variables, parameters) {
     dD  <- mu_H*(1-q_H)*H + mu_HV1*(1-q_HV1)*HV1 + mu_HV2*(1-q_HV2)*HV2
     dCA <- p_IS*delta_IS*(1-q_IS)*IS
     dCH <- (1-p_IS)*delta_IS*(1-q_IS)*IS
+  #  cat(dS+dE+dIS+dIA+dA+dH+dR+dV1+dEV1+dISV1+dIAV1+dAV1+dHV1+dV2+dEV2+dISV2+dIAV2+dAV2+dHV2+dD,"\n")
+   #  cat(dS,dE,dIS,dIA,dA,dH,dR,dV1,dEV1,dISV1,dIAV1,dAV1,dHV1,dV2,dEV2,dISV2,dIAV2,dAV2,dHV2,dD,"\n")
     
-    return(list(c(dS,dE,dIS,dIA,dA,dH,dR,dV1,dEV1,dISV1,dIAV1,dAV1,dHV1,dV2,dEV2,dISV2,dIAV2,dAV2,dHV2,dD,dCA,dCH)))
+    return(list(c(dS,dE,dIS,dIA,dA,dH,dR,
+	dV1,dEV1,dISV1,dIAV1,dAV1,dHV1,
+	dV2,dEV2,dISV2,dIAV2,dAV2,dHV2,dD,dCA,dCH)))
   })
 }
 
@@ -160,8 +155,24 @@ salida <- ode(
   y = initial_values,
   times = time_values,
   func = basic_model,
-  parms = parameters_values
+  parms = parameters_values,
 )
+
+#salida <- ode(
+#  func = basic_model,
+#  y = initial_values,
+#  times = time_values,
+#  parms = parameters_values,
+#  method="rk4"
+#)
+
+
+#salida <- lsoda(
+#  y = initial_values,
+#  times = time_values,
+#  func = basic_model,
+#  parms = parameters_values,rtol = 1e-10, atol = 1e-10
+#)
 
 
 ## Ploting
@@ -171,23 +182,4 @@ library(reshape2)
 N_t<-(salida.df$S+salida.df$E+salida.df$IS+salida.df$IA+salida.df$A+salida.df$H+salida.df$R+salida.df$V1+salida.df$EV1+salida.df$ISV1+salida.df$IAV1+salida.df$AV1+salida.df$HV1+salida.df$V2+salida.df$EV2+salida.df$ISV2+salida.df$IAV2+salida.df$AV2+salida.df$HV2+salida.df$D)/N_0
 plot(N_t)
 #
-
-
-# Creamos el gr?fico 1
-#salida <- as.data.frame(salida)
-#with(salida, {
-#  plot(time, IA, type = "l", col = "blue", xlab = "tiempo (dias)", ylab = "numero de personas")
-#  # lines(time, S, col = "red")
-#  # lines(time, D, col = "green")
-#})
-#legend("right", c("infecciosos", "susceptibles", "recuperados"),
-#       col = c("blue", "red", "green"), lty = 1, bty = "n")
-
-
-#salida.m = melt(salida.df, id.vars='time') # this makes plotting easier by puting all variables in a single column
-#library(ggplot2)
-#p <- ggplot(salida.m, aes(time, value, color = variable)) + geom_point()
-#print(p)   
-
-
 
