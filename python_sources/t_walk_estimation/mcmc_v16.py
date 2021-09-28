@@ -1,7 +1,7 @@
 import numpy as np
-from t_walk_estimation.pytwalk3 import pytwalk3 as pytwalk
+from pytwalk3 import pytwalk3 as pytwalk
 import pandas as pd
-from t_walk_estimation.plots_setup import *
+from plots_setup import *
 from scipy.interpolate import pchip
 from analysis_v10 import getMAP, getsample
 
@@ -13,6 +13,10 @@ period = "daily"
 #
 # MCMC run
 #
+version = "v16"
+data_path    = ""
+samples_path = ""
+figures_path = ""
 ni = 10000  # 4000000
 burnin = 1000  # 100000
 ess = 1000  # 100000  # effective sample size
@@ -35,10 +39,10 @@ N = Pop["PoblacionMid2020"][np.where(Pop["Entidad"] == entity)[0][0]]
 #
 di = np.where(Raw["Dates"] == StartFit)[0][0]
 df = np.where(Raw["Dates"] == EndFit)[0][0]
-A = Raw.values[di:(df + 1), 2].astype(float)  # weekly symptomatic group 1
-H = Raw.values[di:(df + 1), 3].astype(float)  # weekly reported group 1
-D = Raw.values[di:(df + 1), 4].astype(float)  # weekly deaths group 1
-t = np.arange(0, df - di + 1, 1.0)  # observed times
+A = Raw.values[di:(df + 1), 2].astype(float)  # weekly symptomatic group
+H = Raw.values[di:(df + 1), 3].astype(float)  # weekly reported group
+D = Raw.values[di:(df + 1), 4].astype(float)  # weekly deaths group
+t = np.arange(0, df - di + 1, 1.0)            # observed times
 nt = t.shape[0]
 #
 # Parameter details

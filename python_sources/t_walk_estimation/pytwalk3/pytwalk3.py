@@ -7,18 +7,17 @@
 ########################################################
 
 
-
 from numpy.random import uniform, normal
 from numpy import ones, zeros, cumsum, shape, mat, cov, mean, ceil, matrix, sqrt
 from numpy import floor, exp, log, sum, pi, savetxt, loadtxt, array
 
 from time import time, localtime, strftime
 
-
 try:
     from pylab import plot, hist, xlabel, ylabel, title
 except:
-    print("pytwalk: WARNING: pylab module not available, Ana, TS and Hist methods will fail.")
+    print("pytwalk: WARNING: pylab module not available, Ana, \
+     TS and Hist methods will fail.")
 
 #### Some auxiliar functions and constants
 ## square of the norm.
@@ -30,7 +29,8 @@ log3 = log(3.0)
 
 def Remain( Tr, it, sec1, sec2):
     """ Remaining time Information messages:
-        total iterations Tr, current it, start time, current time, as returned by time() (floats)."""
+        total iterations Tr, current it, start time, current time, \
+        as returned by time() (floats)."""
 
     # how many seconds remaining
     ax = int( (Tr - it) *  ((sec2 - sec1)/it) )
@@ -55,9 +55,6 @@ def Remain( Tr, it, sec1, sec2):
 
 
 
-
-
-
 class pytwalk:
     """This is the t-walk class.
 
@@ -71,12 +68,13 @@ class pytwalk:
     
     t positive, u= -log likelihood and w= -log prior 
 
-    Mytwalk = pytwalk( n=3, t=0.5, u=MyMinusLoglikelihood, w=MyMinusLogPrior, Supp=MySupportFunction).
+    Mytwalk = pytwalk( n=3, t=0.5, 
+        u=MyMinusLoglikelihood, w=MyMinusLogPrior, Supp=MySupportFunction).
 
     In this case the objective function is U= t*u + w and u, for x (not xp)
-    is saved in self.Output_u.  This is a backwards compatible implementation for
-    penilized likelihood for thermodynamicl integral to estimate
-    normalizing constants.
+    is saved in self.Output_u.  This is a backwards compatible 
+    implementation for penilized likelihood for thermodynamicl integral 
+    to estimate normalizing constants.
 
     Then do: Mytwalk.Run?
 
@@ -103,7 +101,8 @@ class pytwalk:
         self.Output = zeros((1, n+1)) ### No data (MCMC output) yet
         self.Output_u = array([0.0]) ### To save ll_e, the likelihood energy
         self.T = 1
-        self.Acc = zeros(6)  ### To save the acceptance rates of each kernel, and the global acc. rate
+        self.Acc = zeros(6)  
+        ### To save the acceptance rates of each kernel, and the global acc. rate
 
         #### Kernel probabilities
         self.Fw = cumsum(ww)

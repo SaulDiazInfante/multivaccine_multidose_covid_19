@@ -1,4 +1,5 @@
-# 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
+# 
+# 
 library(deSolve)
 library(rjson)
 library(reshape2)
@@ -31,7 +32,7 @@ splitedTimeLine <-
   )
 # First iteration
 currentTimeWeek <- unlist(splitedTimeLine[[1]])
-phiV <- 
+phiV <-
   computeVaccinatonRates(parameters_values, 
                          vaccinated_perweek1[1],
                          vaccinated_perweek2[1])
@@ -78,7 +79,7 @@ for (k in 2:length(splitedTimeLine)) {
 #
 # required by ggplot: data object must be a data frame
 initial_values <- loadInitialConditions(dataFrameModelParameters)
-N_0 <- sum(initial_values)  - (421363.8 + 49450.24)
+N_0 <- sum(initial_values)- (421363.8 + 49450.24)
 N_t <-
   (
     currentSolution$S + currentSolution$E + currentSolution$I_S + 
@@ -95,8 +96,8 @@ fig00 <-  fig00 + geom_line()
 plotly::ggplotly(fig00)
 
 figVac <- ggplot(currentSolution, aes(x = time, y = X_k))
-figVac <-  figVac + geom_line()
-plotly::ggplotly(figVac)    
+figVac <- figVac + geom_line()
+plotly::ggplotly(figVac)
 
 figS <- plot_ly(currentSolution, x = ~time, 
                  y = ~S, 
