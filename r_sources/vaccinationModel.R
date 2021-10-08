@@ -1,5 +1,3 @@
-# 
-# 
 library(deSolve)
 library(rjson)
 library(reshape2)
